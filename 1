@@ -1,0 +1,22 @@
+def CaseChange(c):
+    if (ord(a) >= 65 and ord(a) <= 90) or (ord(a) >= 97 and ord(a) <= 122):
+        if (ord(a) >= 65 and ord(a) <= 90):
+            c = chr(ord(a) + 32)
+        else:
+            c = chr(ord(a) - 32)
+    else:
+        c = a
+ 
+    return c
+    if (ord(a) >= 65 and ord(a) <= 90) or (ord(a) >= 97 and ord(a) <= 122):
+        if (ord(a) >= 65 and ord(a) <= 90):
+            c = chr(ord(a) + 32)
+        else:
+            c = chr(ord(a) - 32)
+    else:
+        c = a
+ 
+    return c
+a = input()
+ans =  CaseChange(a)
+print (ans)
