@@ -1,0 +1,159 @@
+import json
+import os
+
+class Book:
+    def __init__(self, title, author, genre, year, description):
+        self.title = title
+        self.author = author
+        self.genre = genre
+        self.year = year
+        self.description = description
+        self.read_status = False
+        self.favorite = False
+
+    def to_dict(self):
+        return {
+            "title": self.title,
+            "author": self.author,
+            "genre": self.genre,
+            "year": self.year,
+            "description": self.description,
+            "read_status": self.read_status,
+            "favorite": self.favorite
+        }
+
+    @staticmethod
+    def from_dict(data):
+        book = Book(data['title'], data['author'], data['genre'], data['year'], data['description'])
+        book.read_status = data['read_status']
+        book.favorite = data['favorite']
+        return book
+
+class Library:
+    def __init__(self):
+        self.books = []
+        self.load_books()
+
+    def add_book(self, book):
+        self.books.append(book)
+        self.save_books()
+
+    def remove_book(self, title):
+        self.books = [book for book in self.books if book.title != title]
+        self.save_books()
+
+    def mark_as_read(self, title):
+        for book in self.books:
+            if book.title == title:
+                book.read_status = True
+                break
+        self.save_books()
+
+    def add_to_favorites(self, title):
+        for book in self.books:
+            if book.title == title:
+                book.favorite = True
+                break
+        self.save_books()
+
+    def remove_from_favorites(self, title):
+        for book in self.books:
+            if book.title == title:
+                book.favorite = False
+                break
+        self.save_books()
+
+    def list_books(self, sort_by=None, filter_genre=None, filter_read_status=None):
+        filtered_books = self.books
+        
+        if filter_genre:
+            filtered_books = [book for book in filtered_books if book.genre == filter_genre]
+        
+        if filter_read_status is not None:
+            filtered_books = [book for book in filtered_books if book.read_status == filter_read_status]
+
+        if sort_by:
+            filtered_books.sort(key=lambda x: getattr(x, sort_by))
+
+        for book in filtered_books:
+            print(f"{book.title} by {book.author} ({book.year}) - {'Read' if book.read_status else 'Not Read'} - {'Favorite' if book.favorite else 'Not Favorite'}")
+
+    def search_books(self, keyword):
+        results = [book for book in self.books if keyword.lower() in book.title.lower() or 
+                   keyword.lower() in book.author.lower() or 
+                   keyword.lower() in book.description.lower()]
+        
+        if results:
+            for book in results:
+                print(f"{book.title} by {book.author} ({book.year})")
+        else:
+            print("No books found.")
+
+    def save_books(self):
+        with open('library_data.json', 'w') as f:
+            json.dump([book.to_dict() for book in self.books], f)
+
+    def load_books(self):
+        if os.path.exists('library_data.json'):
+            with open('library_data.json', 'r') as f:
+                books_data = json.load(f)
+                self.books = [Book.from_dict(data) for data in books_data]
+
+def main():
+    library = Library()
+
+    while True:
+        print("\nT-Библиотека")
+        print("1. Добавить книгу")
+        print("2. Просмотреть книги")
+        print("3. Изменить статус книги на прочитана")
+        print("4. Добавить в избранное")
+        print("5. Удалить книгу")
+        print("6. Поиск книги")
+        print("7. Выход")
+
+        choice = input("Выберите действие: ")
+        if choice == '1':
+            title = input("Название книги: ")
+            author = input("Автор: ")
+            genre = input("Жанр: ")
+            year = input("Год издания: ")
+            description = input("Описание: ")
+            library.add_book(Book(title, author, genre, year, description))
+        
+        elif choice == '2':
+            sort_by = input("Сортировать по (title/author/year) или оставить пустым: ")
+            filter_genre = input("Фильтровать по жанру (или оставить пустым): ")
+            filter_read_status_input = input("Фильтровать по статусу (прочитана/не прочитана) (или оставить пустым): ")
+            filter_read_status = None
+            
+            if filter_read_status_input.lower() == 'прочитана':
+                filter_read_status = True
+            elif filter_read_status_input.lower() == 'не прочитана':
+                filter_read_status = False
+            
+            library.list_books(sort_by=sort_by if sort_by else None,
+                               filter_genre=filter_genre if filter_genre else None,
+                               filter_read_status=filter_read_status)
+
+        elif choice == '3':
+            title = input("Введите название книги, которую хотите отметить как прочитанную: ")
+            library.mark_as_read(title)
+
+        elif choice == '4':
+            title = input("Введите название книги, которую хотите добавить в избранное: ")
+            library.add_to_favorites(title)
+
+        elif choice == '5':
+            title = input("Введите название книги, которую хотите удалить: ")
+            library.remove_book(title)
+
+        elif choice == '6':
+            keyword = input("Введите ключевое слово для поиска: ")
+            library.search_books(keyword)
+
+        elif choice == '7':
+            break
+
+if __name__ == "__main__":
+    main()
